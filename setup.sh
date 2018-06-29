@@ -53,6 +53,11 @@ function refresh_nodes() {
   echo "$managers"
 }
 
+function build_containers() {
+    echo "Building containers without public image"
+    docker-compose -f docker-compose.yml build 
+}
+
 # Deploy stack - currently on the same machine but prepare for future possibility of
 # multimachine setup
 function deploy_stack() {
@@ -61,14 +66,13 @@ function deploy_stack() {
     exit 0
   fi
 
-  docker-compose -f docker-compose.yml build --pull 
+  # docker-compose -f docker-compose.yml build --pull 
 
   for manager in $managers
   do
     ip=$(docker-machine ip $manager)
     eval $(docker-machine env $manager)
-    #docker stack deploy -c ./docker-compose.prod.yml --with-registry-auth custom-analytics
-    docker stack deploy -c ./docker-compose.prod.yml happy-service
+    docker stack deploy -c ./docker-compose.yml happy-service
     echo
     echo "$(docker service ls)"
     echo
@@ -155,9 +159,10 @@ refresh_nodes
 if   [ "$command" == "deploy" ];        then deploy_stack
 elif [ "$command" == "deploy-stack" ];  then deploy_stack
 elif [ "$command" == "clean" ];         then clean
+elif [ "$command" == "build" ];         then build_containers
 elif [ "$command" == "create" ];        then create
 elif [ "$command" == "remove" ];        then remove
 elif [ "$command" == "ls" ];            then list
 elif [ "$command" == "setup" ];         then setup
 
-else echo "Invalid option: $command - please use one of: setup, deploy, clean, create, remove, deploy-stack, ls"; fi
+else echo "Invalid option: $command - please use one of: setup, build, deploy, clean, create, remove, deploy-stack, ls"; fi

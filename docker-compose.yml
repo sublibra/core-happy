@@ -10,9 +10,6 @@ services:
       - 9090:9090
     labels:
       qix-engine: ""
-    volumes:
-      - /home/docker/data/csv:/data
-      - /home/docker/data/doc:/doc
       
   licenses:
     image: qlikcore/licenses:1.0.2
@@ -24,12 +21,14 @@ services:
       - 9200:9200
 
   happy-server:
-    build: ../happy-notify
+    build: ../core-happy-server
+    image: core-happy_happy-server:latest
     ports:
       - 80:8080
 
   jdbc-connector:
     build: ../core-grpc-jdbc-connector
+    image: core-happy_jdbc-connector:latest
     ports:
       - 50051:50051
     environment:
