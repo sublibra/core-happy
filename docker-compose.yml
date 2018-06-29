@@ -1,0 +1,37 @@
+version: "3.3"
+
+services:
+
+  qix-engine:
+    image: qlikcore/engine:12.193.0
+    command: -S AcceptEULA=YES -S LicenseServiceUrl=http://licenses:9200 -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="jdbc,jdbc-connector:50051"
+    ports:
+      - 19076:9076
+      - 9090:9090
+    labels:
+      qix-engine: ""
+    volumes:
+      - /home/docker/data/csv:/data
+      - /home/docker/data/doc:/doc
+      
+  licenses:
+    image: qlikcore/licenses:1.0.2
+    environment:
+      - LICENSES_SERIAL_NBR
+      - LICENSES_CONTROL_NBR
+      - LICENSES_LOG_LEVEL=debug
+    ports:
+      - 9200:9200
+
+  happy-server:
+    build: ../happy-notify
+    ports:
+      - 80:8080
+
+  jdbc-connector:
+    build: ../core-grpc-jdbc-connector
+    ports:
+      - 50051:50051
+    environment:
+      DATABASE_FETCH_SIZE: 100000
+      MAX_DATA_CHUNK_SIZE: 300
