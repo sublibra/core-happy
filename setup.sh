@@ -55,7 +55,10 @@ function refresh_nodes() {
 
 function build_containers() {
     echo "Building containers without public image"
-    docker-compose -f docker-compose.yml build 
+    docker-compose -f docker-compose.yml build
+    docker push sublibra/core-happy_happy-server
+    docker push sublibra/core-happy_jdbc-connector
+
 }
 
 # Deploy stack - currently on the same machine but prepare for future possibility of
@@ -65,8 +68,6 @@ function deploy_stack() {
     echo "No nodes to deploy against."
     exit 0
   fi
-
-  # docker-compose -f docker-compose.yml build --pull 
 
   for manager in $managers
   do

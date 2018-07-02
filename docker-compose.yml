@@ -22,13 +22,13 @@ services:
 
   happy-server:
     build: ../core-happy-server
-    image: core-happy_happy-server:latest
+    image: sublibra/core-happy_happy-server
     ports:
       - 80:8080
 
   jdbc-connector:
     build: ../core-grpc-jdbc-connector
-    image: core-happy_jdbc-connector:latest
+    image: sublibra/core-happy_jdbc-connector
     ports:
       - 50051:50051
     environment:
