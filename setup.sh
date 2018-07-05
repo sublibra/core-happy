@@ -55,6 +55,15 @@ function refresh_nodes() {
 
 function build_containers() {
     echo "Building containers without public image"
+    # Build the web app
+    cd ../happy-web
+    npm install --only=production
+    npm run build
+    cd ../core-happy
+    # Copy the app to the web server before dockerizing it
+    cp -r ../happy-web/dist ../core-happy-server/
+    pwd
+
     docker-compose -f docker-compose.yml build
     docker push sublibra/core-happy_happy-server
     docker push sublibra/core-happy_jdbc-connector
@@ -77,7 +86,7 @@ function deploy_stack() {
     echo
     echo "$(docker service ls)"
     echo
-    echo "Then all the replicas for the service is started (this may take several minutes) -"
+    echo "When all the replicas for the service is started (this may take several minutes) -"
     echo "The following routes can be accessed:"
     echo "Deployment target         - http://$ip/"
   done
