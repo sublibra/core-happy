@@ -34,10 +34,10 @@ set -e
 command=$1
 rest=${@:2}
 user=$(id -u -n)
-machine_prefix="${user}-ca"
+machine_prefix="${user}"
 switches="--driver=$DOCKER_DRIVER --engine-opt log-opt="max-size=10m" --amazonec2-open-port 19076 --engine-opt experimental=true --engine-opt metrics-addr=0.0.0.0:4999 --engine-label env=qliktive"
 machines=
-managers=
+happymachines=
 
 # Override default node name prefix if the user wants to.
 if [ "$DOCKER_PREFIX" != "" ]; then
@@ -48,14 +48,20 @@ fi
 # or removing nodes), this function simplifies it.
 function refresh_nodes() {
   machines=$(docker-machine ls --filter label=env=qliktive -q)
-  managers=$(echo "$machines" | grep -i 'manager' || true)
-  echo "Managers found:"
-  echo "$managers"
+  happymachines=$(echo "$machines" | grep -i 'happyweb' || true)
+  echo "Happy machines found:"
+  echo "$happymachines"
 }
 
 function build_containers() {
     echo "Building containers without public image"
     # Build the web app
+
+    # Set engine ip in happyweb
+    ip=$(docker-machine ip $machines)
+    echo "Make sure the engine url in happy-web/config.js refers to $ip"
+    # TODO do this automatically
+    
     cd ../happy-web
     npm install --only=production
     npm run build
@@ -73,15 +79,15 @@ function build_containers() {
 # Deploy stack - currently on the same machine but prepare for future possibility of
 # multimachine setup
 function deploy_stack() {
-  if [ -z "$machines" ]; then
+  if [ -z "$happymachines" ]; then
     echo "No nodes to deploy against."
     exit 0
   fi
 
-  for manager in $managers
+  for machines in $happymachines
   do
-    ip=$(docker-machine ip $manager)
-    eval $(docker-machine env $manager)
+    ip=$(docker-machine ip $machines)
+    eval $(docker-machine env $machines)
     docker stack deploy -c ./docker-compose.yml happy-service
     echo
     echo "$(docker service ls)"
@@ -94,26 +100,26 @@ function deploy_stack() {
 
 # Clean a deployed stack from the swarm nodes.
 function clean() {
-  if [ -z "$managers" ]; then
+  if [ -z "$happymachines" ]; then
     echo "No nodes to clean."
     exit 0
   fi
 
-  for manager in $managers
+  for machine in $happymachines
   do
-    eval $(docker-machine env $manager)
+    eval $(docker-machine env $machine)
     docker stack rm happy-service
   done
 }
 
-# Create node (1 manager)
+# Create node
 function create() {
   if [ "$machines" ]; then
     echo "There are existing qliktive nodes, please remove them and try again."
     exit 0
   fi
 
-  name="${machine_prefix}-manager"
+  name="${machine_prefix}-happyweb"
 
   AWS_INSTANCE_TYPE="${AWS_INSTANCE_TYPE_MANAGER:-$AWS_INSTANCE_TYPE_DEFAULT}" \
   docker-machine create $switches $name
@@ -132,20 +138,22 @@ function create() {
 
 # Remove all nodes related to this project.
 function remove() {
-  if [ -z "$machines" ]; then
-    echo "No qliktive nodes to remove."
+  if [ -z "$happymachines" ]; then
+    echo "No happy machines to remove."
     exit 0
   fi
-
-  docker-machine rm $machines
+  
+  docker-machine rm $happymachines
 }
 
 function list() {
-  echo "Managers:"
-  echo "$managers"
-  for manager in $managers
+  echo "Happy machines:"
+  echo "$happymachines"
+  echo "$(docker service ls)"
+  for machines in $happymachines
   do
-    docker-machine ssh $manager docker service ls
+    eval $(docker-machine env $machines)
+    echo "$(docker service ls)"
   done
 }
 
