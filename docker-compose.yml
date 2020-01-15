@@ -3,7 +3,7 @@ version: "3.3"
 services:
 
   qix-engine:
-    image: qlikcore/engine:12.225.0
+    image: qlikcore/engine:12.538.0
     command: -S AcceptEULA=YES -S LicenseServiceUrl=http://licenses:9200 -S EnableGrpcCustomConnectors=1 -S GrpcConnectorPlugins="jdbc,jdbc-connector:50051"
     ports:
       - 19076:9076
@@ -12,10 +12,9 @@ services:
       qix-engine: ""
       
   licenses:
-    image: qlikcore/licenses:1.0.5
+    image: qlikcore/licenses:3.5.0
     environment:
-      - LICENSES_SERIAL_NBR
-      - LICENSES_CONTROL_NBR
+      - LICENSE_KEY
       - LICENSES_LOG_LEVEL=debug
     ports:
       - 9200:9200
